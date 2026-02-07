@@ -12,7 +12,6 @@ from plotly.subplots import make_subplots
 
 from short_video_intel.config import (
     APP_NAME,
-    DEFAULT_COUNTRY_DATASET_FILENAME,
     DEFAULT_MAIN_DATASET_FILENAME,
     DEFAULT_SAMPLE_LIMIT,
     DEFAULT_SEED,
