@@ -63,7 +63,6 @@ class DashboardApp:
             Path("/mnt/data") / DEFAULT_MAIN_DATASET_FILENAME,
         ]
 
-
         st.sidebar.markdown("### Data configuration")
 
         uploaded_main = st.sidebar.file_uploader(
@@ -85,7 +84,9 @@ class DashboardApp:
         st.sidebar.caption(dataset_detail)
 
         if dataset_source == "None" or raw.empty:
-            st.error("No main dataset loaded yet. Place a CSV in ./data/ or upload a file in the sidebar.")
+            st.error(
+                "No main dataset loaded yet. Place a CSV in ./data/ or upload a file in the sidebar."
+            )
             st.stop()
 
         if len(raw) > DEFAULT_SAMPLE_LIMIT:
@@ -99,8 +100,6 @@ class DashboardApp:
         if df.empty:
             st.error("The file loaded but no usable rows remain after processing.")
             st.stop()
-
-
 
         st.sidebar.markdown("---")
         st.sidebar.markdown("### Filters")
@@ -118,14 +117,18 @@ class DashboardApp:
             platforms_all = sorted(df["platform"].dropna().astype(str).unique().tolist())
             if len(platforms_all) > 0:
                 default_platforms = platforms_all[: min(3, len(platforms_all))]
-                platform_filter = st.sidebar.multiselect("Platform", platforms_all, default=default_platforms)
+                platform_filter = st.sidebar.multiselect(
+                    "Platform", platforms_all, default=default_platforms
+                )
                 if platform_filter:
                     filtered = filtered[filtered["platform"].isin(platform_filter)]
 
         if "country" in df.columns:
             countries_all = sorted(df["country"].dropna().astype(str).unique().tolist())
             default_countries = countries_all[:40]
-            country_filter = st.sidebar.multiselect("Country / Region", countries_all, default=default_countries)
+            country_filter = st.sidebar.multiselect(
+                "Country / Region", countries_all, default=default_countries
+            )
 
         if "category" in df.columns:
             categories_all = sorted(df["category"].dropna().astype(str).unique().tolist())
@@ -179,14 +182,18 @@ class DashboardApp:
             st.warning("Filters are too restrictive; no rows match the current selection.")
             st.stop()
 
-
-
         total_videos = len(fdf)
         total_views = fdf["views"].sum() if "views" in fdf.columns else 0.0
         median_engagement = (
-            float(np.nanmedian(fdf["engagement_rate"])) * 100 if "engagement_rate" in fdf.columns else 0.0
+            float(np.nanmedian(fdf["engagement_rate"])) * 100
+            if "engagement_rate" in fdf.columns
+            else 0.0
         )
-        platform_text = " · ".join(sorted(fdf["platform"].dropna().astype(str).unique().tolist()[:3])) if "platform" in fdf.columns else ""
+        platform_text = (
+            " · ".join(sorted(fdf["platform"].dropna().astype(str).unique().tolist()[:3]))
+            if "platform" in fdf.columns
+            else ""
+        )
 
         hero_html = f"""
         <div class="hero">
@@ -277,8 +284,6 @@ class DashboardApp:
 
         st.markdown("")
 
-
-
         show_data_tab = len(fdf.columns) <= 120
 
         tab_labels = [
@@ -292,8 +297,6 @@ class DashboardApp:
             tab_labels.append("Data Explorer")
 
         tabs = st.tabs(tab_labels)
-
-
 
         with tabs[0]:
             st.markdown('<div class="section-title">Overview</div>', unsafe_allow_html=True)
@@ -328,14 +331,28 @@ class DashboardApp:
 
                 if "views" in fdf.columns:
                     stats_rows.append(("Median views", f"{np.nanmedian(fdf['views']):,.0f}"))
-                    stats_rows.append(("90th percentile views", f"{np.nanpercentile(fdf['views'], 90):,.0f}"))
+                    stats_rows.append(
+                        ("90th percentile views", f"{np.nanpercentile(fdf['views'], 90):,.0f}")
+                    )
 
                 if "engagement_rate" in fdf.columns:
-                    stats_rows.append(("Median engagement", f"{(np.nanmedian(fdf['engagement_rate']) * 100):.2f}%"))
-                    stats_rows.append(("Top 10% engagement threshold", f"{(fdf['engagement_rate'].quantile(0.9) * 100):.2f}%"))
+                    stats_rows.append(
+                        (
+                            "Median engagement",
+                            f"{(np.nanmedian(fdf['engagement_rate']) * 100):.2f}%",
+                        )
+                    )
+                    stats_rows.append(
+                        (
+                            "Top 10% engagement threshold",
+                            f"{(fdf['engagement_rate'].quantile(0.9) * 100):.2f}%",
+                        )
+                    )
 
                 if "duration_min" in fdf.columns:
-                    stats_rows.append(("Median duration (min)", f"{np.nanmedian(fdf['duration_min']):.2f}"))
+                    stats_rows.append(
+                        ("Median duration (min)", f"{np.nanmedian(fdf['duration_min']):.2f}")
+                    )
 
                 if "viral_potential" in fdf.columns:
                     share_high = (fdf["viral_potential"] == "High").mean() * 100
@@ -376,7 +393,9 @@ class DashboardApp:
                     pie_fig.update_layout(height=380)
                     st.plotly_chart(pie_fig, width="stretch")
                 else:
-                    st.info("Viral potential is derived from virality score and engagement; it activates when those metrics exist.")
+                    st.info(
+                        "Viral potential is derived from virality score and engagement; it activates when those metrics exist."
+                    )
 
             with c2:
                 if "performance_tier" in fdf.columns and "engagement_rate" in fdf.columns:
@@ -403,12 +422,14 @@ class DashboardApp:
                     """
                     st.markdown(card_html, unsafe_allow_html=True)
 
-
-
         with tabs[1]:
             st.markdown('<div class="section-title">Growth & Timing</div>', unsafe_allow_html=True)
 
-            available_metrics = [m for m in ["views", "likes", "comments", "shares", "engagement_rate"] if m in fdf.columns]
+            available_metrics = [
+                m
+                for m in ["views", "likes", "comments", "shares", "engagement_rate"]
+                if m in fdf.columns
+            ]
             if not available_metrics:
                 st.info("No time-series metrics detected in this dataset slice.")
             else:
@@ -464,7 +485,8 @@ class DashboardApp:
                                 y=trends["growth_rate"],
                                 name="Growth rate (%)",
                                 marker_color=[
-                                    "#22c55e" if x >= 0 else "#ef4444" for x in trends["growth_rate"].fillna(0)
+                                    "#22c55e" if x >= 0 else "#ef4444"
+                                    for x in trends["growth_rate"].fillna(0)
                                 ],
                             ),
                             row=2,
@@ -472,7 +494,11 @@ class DashboardApp:
                         )
 
                         fig.update_layout(height=640, showlegend=True)
-                        fig.update_yaxes(title_text=f"{y_prefix} {format_metric_label(metric_choice)}", row=1, col=1)
+                        fig.update_yaxes(
+                            title_text=f"{y_prefix} {format_metric_label(metric_choice)}",
+                            row=1,
+                            col=1,
+                        )
                         fig.update_yaxes(title_text="Growth rate %", row=2, col=1)
                         st.plotly_chart(fig, width="stretch")
 
@@ -481,9 +507,13 @@ class DashboardApp:
                         best_row = trends.loc[trends["metric_value"].idxmax()]
                         peak_period = best_row["time"]
                         peak_period_text = (
-                            peak_period.strftime("%Y-%m-%d") if hasattr(peak_period, "strftime") else str(peak_period)
+                            peak_period.strftime("%Y-%m-%d")
+                            if hasattr(peak_period, "strftime")
+                            else str(peak_period)
                         )
-                        peak_value_text = format_metric_value(metric_choice, best_row["metric_value"])
+                        peak_value_text = format_metric_value(
+                            metric_choice, best_row["metric_value"]
+                        )
                         card_peak = f"""
                         <div class="card">
                           <div class="card-title">Peak period</div>
@@ -524,17 +554,14 @@ class DashboardApp:
                             st.markdown(card_periods, unsafe_allow_html=True)
 
             st.markdown("")
-            st.markdown('<div class="section-title">Posting time patterns</div>', unsafe_allow_html=True)
+            st.markdown(
+                '<div class="section-title">Posting time patterns</div>', unsafe_allow_html=True
+            )
 
             c1, c2 = st.columns([1.4, 1.0])
             if "hour" in fdf.columns and "views" in fdf.columns:
                 with c1:
-                    hourly = (
-                        fdf.groupby("hour")["views"]
-                        .median()
-                        .reset_index()
-                        .sort_values("hour")
-                    )
+                    hourly = fdf.groupby("hour")["views"].median().reset_index().sort_values("hour")
                     fig = px.bar(
                         hourly,
                         x="hour",
@@ -546,13 +573,19 @@ class DashboardApp:
 
             if "day_of_week" in fdf.columns and "views" in fdf.columns:
                 with c2:
-                    dow = (
-                        fdf.groupby("day_of_week")["views"]
-                        .median()
-                        .reset_index()
+                    dow = fdf.groupby("day_of_week")["views"].median().reset_index()
+                    categories = [
+                        "Monday",
+                        "Tuesday",
+                        "Wednesday",
+                        "Thursday",
+                        "Friday",
+                        "Saturday",
+                        "Sunday",
+                    ]
+                    dow["day_of_week"] = pd.Categorical(
+                        dow["day_of_week"], categories=categories, ordered=True
                     )
-                    categories = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-                    dow["day_of_week"] = pd.Categorical(dow["day_of_week"], categories=categories, ordered=True)
                     dow = dow.sort_values("day_of_week")
 
                     fig = px.bar(
@@ -564,17 +597,29 @@ class DashboardApp:
                     fig.update_layout(height=380)
                     st.plotly_chart(fig, width="stretch")
 
-
-
         with tabs[2]:
-            st.markdown('<div class="section-title">Creators & content</div>', unsafe_allow_html=True)
+            st.markdown(
+                '<div class="section-title">Creators & content</div>', unsafe_allow_html=True
+            )
 
             if "creator" not in fdf.columns:
-                st.info("No creator column detected. This view activates when a creator-like column exists in the data.")
+                st.info(
+                    "No creator column detected. This view activates when a creator-like column exists in the data."
+                )
             else:
                 metric = st.selectbox(
                     "Rank creators by",
-                    [m for m in ["views", "engagement_rate", "shares", "comments", "virality_score"] if m in fdf.columns],
+                    [
+                        m
+                        for m in [
+                            "views",
+                            "engagement_rate",
+                            "shares",
+                            "comments",
+                            "virality_score",
+                        ]
+                        if m in fdf.columns
+                    ],
                     index=0,
                 )
                 top_n = st.slider("Top N creators", min_value=5, max_value=50, value=15, step=1)
@@ -583,10 +628,18 @@ class DashboardApp:
                     fdf.groupby("creator")
                     .agg(
                         views=("views", "sum") if "views" in fdf.columns else ("creator", "size"),
-                        engagement_rate=("engagement_rate", "median") if "engagement_rate" in fdf.columns else ("creator", "size"),
-                        shares=("shares", "sum") if "shares" in fdf.columns else ("creator", "size"),
-                        comments=("comments", "sum") if "comments" in fdf.columns else ("creator", "size"),
-                        virality_score=("virality_score", "median") if "virality_score" in fdf.columns else ("creator", "size"),
+                        engagement_rate=("engagement_rate", "median")
+                        if "engagement_rate" in fdf.columns
+                        else ("creator", "size"),
+                        shares=("shares", "sum")
+                        if "shares" in fdf.columns
+                        else ("creator", "size"),
+                        comments=("comments", "sum")
+                        if "comments" in fdf.columns
+                        else ("creator", "size"),
+                        virality_score=("virality_score", "median")
+                        if "virality_score" in fdf.columns
+                        else ("creator", "size"),
                         videos=("creator", "size"),
                     )
                     .reset_index()
@@ -677,13 +730,13 @@ class DashboardApp:
                     fig.update_layout(height=380)
                     st.plotly_chart(fig, width="stretch")
 
-
-
         with tabs[3]:
             st.markdown('<div class="section-title">Virality lab</div>', unsafe_allow_html=True)
 
             if "virality_score" not in fdf.columns:
-                st.info("Virality score is computed when views, shares, and engagement can be derived.")
+                st.info(
+                    "Virality score is computed when views, shares, and engagement can be derived."
+                )
             else:
                 scores = fdf["virality_score"].dropna()
                 if scores.empty:
@@ -763,11 +816,20 @@ class DashboardApp:
                         st.markdown(card_html, unsafe_allow_html=True)
 
                     st.markdown("")
-                    st.markdown('<div class="section-title">Viral candidates table</div>', unsafe_allow_html=True)
+                    st.markdown(
+                        '<div class="section-title">Viral candidates table</div>',
+                        unsafe_allow_html=True,
+                    )
 
                     if "title" in viral_candidates.columns:
                         preview_cols = ["title"]
-                        for c in ["platform", "views", "engagement_rate", "virality_score", "duration_min"]:
+                        for c in [
+                            "platform",
+                            "views",
+                            "engagement_rate",
+                            "virality_score",
+                            "duration_min",
+                        ]:
                             if c in viral_candidates.columns:
                                 preview_cols.append(c)
 
@@ -785,7 +847,10 @@ class DashboardApp:
 
                     if "views" in fdf.columns and "engagement_rate" in fdf.columns:
                         st.markdown("")
-                        st.markdown('<div class="section-title">Views vs engagement</div>', unsafe_allow_html=True)
+                        st.markdown(
+                            '<div class="section-title">Views vs engagement</div>',
+                            unsafe_allow_html=True,
+                        )
 
                         sample_base = (
                             fdf.sample(min(len(fdf), MAX_SCATTER_POINTS), random_state=DEFAULT_SEED)
@@ -795,7 +860,9 @@ class DashboardApp:
 
                         sample_plot = sample_base[["views", "engagement_rate"]].copy()
                         sample_plot["views"] = pd.to_numeric(sample_plot["views"], errors="coerce")
-                        sample_plot["engagement_rate"] = pd.to_numeric(sample_plot["engagement_rate"], errors="coerce")
+                        sample_plot["engagement_rate"] = pd.to_numeric(
+                            sample_plot["engagement_rate"], errors="coerce"
+                        )
                         sample_plot = sample_plot.dropna(subset=["views", "engagement_rate"])
 
                         if sample_plot.empty:
@@ -820,42 +887,44 @@ class DashboardApp:
                             fig.update_xaxes(type="log")
                             st.plotly_chart(fig, width="stretch")
 
-
-
         with tabs[4]:
-            st.markdown('<div class="section-title">Segment comparison</div>', unsafe_allow_html=True)
+            st.markdown(
+                '<div class="section-title">Segment comparison</div>', unsafe_allow_html=True
+            )
 
-            candidate_dims = [c for c in ["platform", "country", "category", "duration_bucket", "performance_tier"] if c in fdf.columns]
-            candidate_metrics = [c for c in ["views", "likes", "comments", "shares", "engagement_rate", "virality_score"] if c in fdf.columns]
+            candidate_dims = [
+                c
+                for c in ["platform", "country", "category", "duration_bucket", "performance_tier"]
+                if c in fdf.columns
+            ]
+            candidate_metrics = [
+                c
+                for c in [
+                    "views",
+                    "likes",
+                    "comments",
+                    "shares",
+                    "engagement_rate",
+                    "virality_score",
+                ]
+                if c in fdf.columns
+            ]
 
             if not candidate_dims or not candidate_metrics:
-                st.info("This view activates when at least one categorical dimension and one numeric metric are present.")
+                st.info(
+                    "This view activates when at least one categorical dimension and one numeric metric are present."
+                )
             else:
                 dim = st.selectbox("Segment by", candidate_dims, index=0)
                 metric = st.selectbox("Metric", candidate_metrics, index=0)
                 agg_type = st.radio("Aggregation", ["median", "mean", "sum"], horizontal=True)
 
                 if agg_type == "median":
-                    seg = (
-                        fdf.groupby(dim)[metric]
-                        .median()
-                        .rename(metric)
-                        .reset_index()
-                    )
+                    seg = fdf.groupby(dim)[metric].median().rename(metric).reset_index()
                 elif agg_type == "mean":
-                    seg = (
-                        fdf.groupby(dim)[metric]
-                        .mean()
-                        .rename(metric)
-                        .reset_index()
-                    )
+                    seg = fdf.groupby(dim)[metric].mean().rename(metric).reset_index()
                 else:
-                    seg = (
-                        fdf.groupby(dim)[metric]
-                        .sum()
-                        .rename(metric)
-                        .reset_index()
-                    )
+                    seg = fdf.groupby(dim)[metric].sum().rename(metric).reset_index()
 
                 seg = seg.sort_values(metric, ascending=False)
 
@@ -899,11 +968,11 @@ class DashboardApp:
 
                     st.markdown(card_html, unsafe_allow_html=True)
 
-
-
         if show_data_tab:
             with tabs[-1]:
-                st.markdown('<div class="section-title">Data explorer</div>', unsafe_allow_html=True)
+                st.markdown(
+                    '<div class="section-title">Data explorer</div>', unsafe_allow_html=True
+                )
 
                 c1, c2, c3 = st.columns(3)
                 with c1:
@@ -914,7 +983,9 @@ class DashboardApp:
                     mem_mb = fdf.memory_usage(deep=True).sum() / 1024**2
                     st.metric("Estimated memory (MB)", f"{mem_mb:.1f}")
 
-                rows_to_show = st.slider("Rows to display", min_value=20, max_value=1000, value=150, step=10)
+                rows_to_show = st.slider(
+                    "Rows to display", min_value=20, max_value=1000, value=150, step=10
+                )
                 st.dataframe(
                     fdf.head(rows_to_show),
                     width="stretch",
@@ -943,8 +1014,6 @@ class DashboardApp:
                     )
                     st.dataframe(info_df, width="stretch")
 
-
-
         st.markdown(
             """
         <div class="footer">
@@ -958,6 +1027,7 @@ class DashboardApp:
 
 def main() -> None:
     DashboardApp(Path(__file__).resolve().parent).run()
+
 
 if __name__ == "__main__":
     main()

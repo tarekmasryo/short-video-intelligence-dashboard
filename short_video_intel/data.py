@@ -11,13 +11,14 @@ import pandas as pd
 
 try:
     import streamlit as st
-except Exception:
+except Exception:  # pragma: no cover
     st = None
 
 _F = TypeVar("_F", bound=Callable[..., Any])
 
 
 def cache_data(func: _F) -> _F:
+    """Cache heavy I/O steps when running inside Streamlit."""
     if st is None:
         return func
     return st.cache_data(show_spinner=False)(func)
@@ -25,48 +26,67 @@ def cache_data(func: _F) -> _F:
 
 @dataclass(frozen=True)
 class ColumnMap:
-    views: str
-    likes: str
-    comments: str
-    shares: str
-    date: str
-    creator: str
-    hashtags: str
-    country: str
+    """Best-effort mapping from user columns → normalized concepts.
+
+    All fields are optional because real-world datasets differ a lot.
+    """
+
+    views: str | None = None
+    likes: str | None = None
+    comments: str | None = None
+    shares: str | None = None
+    saves: str | None = None
+    duration: str | None = None
+    date: str | None = None
+    platform: str | None = None
+    creator: str | None = None
+    title: str | None = None
+    category: str | None = None
+    country: str | None = None
+    hashtags: str | None = None
 
     @classmethod
     def from_dict(cls, mapping: dict[str, str]) -> ColumnMap:
-        return cls(**mapping)
+        keys = {
+            "views",
+            "likes",
+            "comments",
+            "shares",
+            "saves",
+            "duration",
+            "date",
+            "platform",
+            "creator",
+            "title",
+            "category",
+            "country",
+            "hashtags",
+        }
+        filtered = {k: v for k, v in mapping.items() if k in keys}
+        return cls(**filtered)
 
     def as_dict(self) -> dict[str, str]:
-        return {
-            "views": self.views,
-            "likes": self.likes,
-            "comments": self.comments,
-            "shares": self.shares,
-            "date": self.date,
-            "creator": self.creator,
-            "hashtags": self.hashtags,
-            "country": self.country,
-        }
+        return {k: v for k, v in self.__dict__.items() if v is not None}
 
 
 @dataclass
 class ShortVideoDataset:
+    """Small helper wrapper (optional) to keep df + mapped columns together."""
+
     df: pd.DataFrame
     columns: ColumnMap
 
     @classmethod
     def from_dataframe(cls, df: pd.DataFrame) -> ShortVideoDataset:
-        mapping = detect_columns(df.columns)
+        mapping = detect_columns(df)
         return cls(df=df, columns=ColumnMap.from_dict(mapping))
 
     def enriched(self) -> ShortVideoDataset:
         enriched_df = enrich_data(self.df.copy(), self.columns.as_dict())
         return ShortVideoDataset(df=enriched_df, columns=self.columns)
 
-    def labeled(self, *, q: float = 0.85) -> ShortVideoDataset:
-        labeled_df = label_viral_potential(self.df.copy(), q=q)
+    def labeled(self, *, q_mid: float = 0.75, q_high: float = 0.90) -> ShortVideoDataset:
+        labeled_df = label_viral_potential(self.df.copy(), q_mid=q_mid, q_high=q_high)
         return ShortVideoDataset(df=labeled_df, columns=self.columns)
 
 
@@ -110,42 +130,71 @@ def try_auto_load(paths) -> tuple[pd.DataFrame, str]:
     return pd.DataFrame(), "Default dataset not found. Upload a CSV to start."
 
 
-def detect_columns(df: pd.DataFrame) -> dict:
-    if df.empty:
+def detect_columns(df: pd.DataFrame) -> dict[str, str]:
+    """Detect common columns by name (exact match first, then substring match)."""
+    if df is None or getattr(df, "empty", True):
         return {}
 
-    column_map = {
+    column_map: dict[str, list[str]] = {
         "views": ["views", "view_count", "views_count", "total_views", "play_count"],
         "likes": ["likes", "like_count", "thumbs_up"],
         "comments": ["comments", "comment_count"],
         "shares": ["shares", "share_count"],
+        "saves": ["saves", "save_count", "bookmarks"],
         "duration": ["duration_sec", "duration", "length_sec", "video_length", "video_length_sec"],
-        "date": ["publish_date", "published_at", "publish_time", "date", "created_at", "upload_date", "timestamp"],
+        "date": [
+            "publish_date",
+            "published_at",
+            "publish_time",
+            "date",
+            "created_at",
+            "upload_date",
+            "timestamp",
+        ],
         "platform": ["platform", "source", "app"],
-        "creator": ["creator", "channel", "channel_name", "author", "uploader", "account", "handle", "username", "page"],
+        "creator": [
+            "creator",
+            "channel",
+            "channel_name",
+            "author",
+            "uploader",
+            "account",
+            "handle",
+            "username",
+            "page",
+        ],
         "title": ["title", "video_title", "name"],
         "category": ["category", "topic", "tag"],
         "country": ["country", "region", "market", "geo"],
-        "hashtags": ["hashtags", "tags"],
+        "hashtags": ["hashtags", "tags", "hashtag"],
     }
 
-    detected = {}
+    detected: dict[str, str] = {}
     lower_cols = {c.lower(): c for c in df.columns}
 
+    # Exact match
     for key, candidates in column_map.items():
         for cand in candidates:
             if cand in lower_cols:
                 detected[key] = lower_cols[cand]
                 break
+
+    # Substring match (fallback)
+    for key, candidates in column_map.items():
+        if key in detected:
+            continue
+        for cand in candidates:
             for c in df.columns:
-                if cand in c.lower() and key not in detected:
+                if cand in c.lower():
                     detected[key] = c
                     break
+            if key in detected:
+                break
 
     return detected
 
 
-def parse_hashtags_cell(x):
+def parse_hashtags_cell(x) -> list[str]:
     if pd.isna(x):
         return []
     s = str(x).strip()
@@ -154,7 +203,7 @@ def parse_hashtags_cell(x):
     if s.startswith("[") and s.endswith("]"):
         try:
             v = ast.literal_eval(s)
-            if isinstance(v, (list, tuple)):
+            if isinstance(v, list | tuple):
                 return [str(t).strip() for t in v if str(t).strip()]
         except Exception:
             pass
@@ -165,13 +214,14 @@ def parse_hashtags_cell(x):
     return [s]
 
 
-def enrich_data(df: pd.DataFrame, col_map: dict) -> pd.DataFrame:
-    if df.empty:
+def enrich_data(df: pd.DataFrame, col_map: dict[str, str]) -> pd.DataFrame:
+    """Create normalized columns + derived metrics (engagement, tiers, virality score)."""
+    if df is None or df.empty:
         return df
 
     df = df.copy()
 
-    for key in ["views", "likes", "comments", "shares", "duration"]:
+    for key in ["views", "likes", "comments", "shares", "saves", "duration"]:
         src = col_map.get(key)
         if src and src in df.columns:
             df[key] = pd.to_numeric(df[src], errors="coerce")
@@ -243,26 +293,33 @@ def enrich_data(df: pd.DataFrame, col_map: dict) -> pd.DataFrame:
     return df
 
 
-def label_viral_potential(df: pd.DataFrame) -> pd.DataFrame:
-    if "virality_score" not in df.columns:
+def label_viral_potential(
+    df: pd.DataFrame, *, q_mid: float = 0.75, q_high: float = 0.90
+) -> pd.DataFrame:
+    """Assign a coarse 'viral_potential' label based on virality_score quantiles."""
+    if df is None or df.empty or "virality_score" not in df.columns:
         return df
+
     scores = df["virality_score"].dropna()
     if scores.empty:
         return df
 
-    q75 = scores.quantile(0.75)
-    q90 = scores.quantile(0.90)
+    q_mid = float(np.clip(q_mid, 0.01, 0.99))
+    q_high = float(np.clip(q_high, 0.01, 0.99))
+    if q_high <= q_mid:
+        q_high = min(0.99, q_mid + 0.05)
 
-    labels = []
-    for v in df["virality_score"]:
+    mid = scores.quantile(q_mid)
+    high = scores.quantile(q_high)
+
+    def label(v):
         if pd.isna(v):
-            labels.append("Unknown")
-        elif v >= q90:
-            labels.append("High")
-        elif v >= q75:
-            labels.append("Medium")
-        else:
-            labels.append("Low")
+            return "Unknown"
+        if v >= high:
+            return "High"
+        if v >= mid:
+            return "Medium"
+        return "Low"
 
-    df["viral_potential"] = labels
+    df["viral_potential"] = df["virality_score"].map(label)
     return df

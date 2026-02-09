@@ -3,10 +3,22 @@
 
 [![Streamlit](https://img.shields.io/badge/Powered%20by-Streamlit-FF4B4B)](https://streamlit.io/)
 ![Python](https://img.shields.io/badge/Python-3.11%2B-2b5b84)
+![License](https://img.shields.io/badge/License-Apache%202.0-blue)
 ![Ruff](https://img.shields.io/badge/lint-ruff-261230)
 ![Pytest](https://img.shields.io/badge/tests-pytest-0A9EDC)
+![CI](https://github.com/tarekmasryo/short-video-intelligence-dashboard/actions/workflows/ci.yml/badge.svg)
 
-A production-style **Streamlit** dashboard that converts “one row per video” datasets into actionable signals: **creator performance**, **timing patterns**, **virality scoring**, and **segment benchmarks**.
+A production-style **Streamlit** dashboard that turns “one row per video” datasets into actionable signals:
+**creator performance**, **timing patterns**, **virality scoring**, and **segment benchmarks**.
+
+---
+
+## 🎥 Preview
+
+![Overview](assets/short-video-overview.png)
+![Creators & Virality](assets/creators-virality-leaderboard.png)
+![Monthly Growth](assets/monthly-comments-growth.png)
+![Data Explorer](assets/data-explorer-view.png)
 
 ---
 
@@ -14,7 +26,7 @@ A production-style **Streamlit** dashboard that converts “one row per video”
 
 - 🧠 **Auto-maps common fields** (views, likes, comments, shares, publish time, platform, creator, category, country, duration).
 - 🧮 Computes **derived metrics** (engagement rates, virality score, performance tiers, viral potential).
-- 🧭 Provides decision views for:
+- 🧭 Decision views for:
   - 📈 **Growth & timing** (day/week/month trends + posting windows)
   - 🏆 **Creators & content** (leaderboards + mix)
   - 🧪 **Virality lab** (threshold + candidates)
@@ -28,30 +40,28 @@ A production-style **Streamlit** dashboard that converts “one row per video”
 ```text
 .
 ├─ app.py
-├─ short_video/
-│  ├─ __init__.py
+├─ short_video_intel/
 │  ├─ config.py
 │  ├─ data.py
 │  ├─ metrics.py
-│  ├─ ui.py
-│  ├─ viz.py
-│  └─ theme.py
+│  ├─ theme.py
+│  └─ ui.py
+├─ data/
+│  └─ youtube_shorts_tiktok_trends_2025.csv
+├─ assets/
+│  └─ (screenshots)
 ├─ tests/
-│  ├─ test_data.py
-│  └─ test_metrics.py
 ├─ .streamlit/
-│  └─ config.toml
 ├─ requirements.txt
 ├─ requirements-dev.txt
-├─ pyproject.toml
-└─ README.md
+└─ pyproject.toml
 ```
 
 ---
 
 ## 🧾 Input data
 
-The app is data-agnostic but works best when your dataset contains columns similar to:
+The app works best when your dataset includes columns similar to:
 
 | Concept | Example column names |
 |---|---|
@@ -60,74 +70,16 @@ The app is data-agnostic but works best when your dataset contains columns simil
 | Comments 💬 | `comments`, `comment_count` |
 | Shares 🔁 | `shares`, `share_count` |
 | Duration (sec) ⏳ | `duration`, `duration_sec`, `video_length` |
-| Publish time 🗓️ | `publish_date`, `published_at`, `upload_date`, `timestamp` |
+| Publish time 🗓️ | `publish_date`, `published_at`, `timestamp` |
 | Platform 📱 | `platform`, `source`, `app` |
 | Creator / Account 👤 | `creator`, `author`, `channel`, `username`, `handle` |
 | Category / Topic 🏷️ | `category`, `topic`, `tag` |
 | Country / Region 🌍 | `country`, `region`, `market`, `geo` |
-| Hashtags #️⃣ | `hashtags`, `tags` |
+| Hashtags #️⃣ | `hashtags`, `tags`, `hashtag` |
 
 Notes:
-- 🧩 If your naming differs (e.g., `video_views_total`), the app attempts best-effort **auto-mapping**.
-- ⏱️ Time fields are parsed into **day/week/month** keys for trends and into **hour/day-of-week** keys for timing patterns.
-
----
-
-## 📐 Metrics & scoring (transparent)
-
-### 📊 Engagement metrics
-
-```text
-engagement_rate = (likes + comments + shares) / views
-like_rate       = likes / views
-comment_rate    = comments / views
-share_rate      = shares / views
-```
-
-### 🚀 Virality score
-
-```text
-virality_score =
-  0.30 * log1p(views)
-+ 0.40 * log1p(shares)
-+ 0.30 * (engagement_rate * 100)
-```
-
-### 🏷️ Performance tiers
-
-Tiers are computed from view quantiles within the active filters:
-- Baseline (≤ median)
-- Strong (median → ~80th percentile)
-- Top 5%
-- Top 1%
-
----
-
-## 🧭 Dashboard tabs
-
-### 1) 🧾 Overview
-Executive KPIs, tier distributions, viral potential breakdown.  
-Use for quick health checks and summary views.
-
-### 2) 📈 Growth & Timing
-Day/week/month trends, growth rate, hour/day-of-week patterns.  
-Use for scheduling strategy and momentum analysis.
-
-### 3) 🏆 Creators & Content
-Creator leaderboards by selected metric + duration/category mix.  
-Use for creator bets, content planning, and category focus.
-
-### 4) 🧪 Virality Lab
-Interactive threshold, viral candidates table, and scatter sampling.  
-Use for defining “viral” for the current dataset and reviewing candidates.
-
-### 5) 🧩 Segment Comparison
-Benchmarks across platform/country/category/duration bucket/tier.  
-Use for diagnosing under/over-performing segments.
-
-### 6) 🔎 Data Explorer
-Preview, memory estimate, and export filtered CSV.  
-Use for quality checks and exporting slices.
+- 🧩 Naming doesn’t have to match exactly — the app uses best-effort **auto-detection**.
+- ⏱️ Time fields are parsed into **day/week/month** for trends and into **hour/day-of-week** for timing patterns.
 
 ---
 
@@ -160,28 +112,30 @@ pytest -q
 
 ---
 
+## 🐳 Docker
+
+```bash
+docker build -t short-video-intel .
+docker run --rm -p 8501:8501 short-video-intel
+```
+
+---
+
 ## 🚀 Deployment notes
 
 ### ☁️ Streamlit Community Cloud
 - Main file: `app.py`
 - Requirements: `requirements.txt`
 
-### 🖧 Local network access
-When running locally, Streamlit prints a **Network URL** for access from another device on the same LAN.
-
----
-
-## 🧯 Troubleshooting
-
-### KeyError related to publish time (e.g., `date`) 🗓️
-The dataset likely does not include a recognizable publish time column or it contains non-parseable values.
-- Ensure a publish time column exists (e.g., `publish_date`, `published_at`, `timestamp`).
-- Prefer ISO timestamps or standard date formats.
-
-### Ruff modified files locally 🧹
-If you run `ruff check . --fix` or `ruff format .`, commit the changes so the deployed version matches what you tested.
+### 🤗 Hugging Face Spaces (Streamlit)
+This repo is compatible as-is:
+- `app.py`
+- `requirements.txt`
+- `.streamlit/config.toml`
 
 ---
 
 ## 📄 License
-See `LICENSE` (if included).
+
+- **Code**: Apache 2.0 (see `LICENSE`)
+- **Sample data**: included for demo. If you replace it with real platform exports, ensure you have the right to publish and redistribute that data.

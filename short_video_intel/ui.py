@@ -29,14 +29,14 @@ def format_dim_label(dim: str) -> str:
 def format_creator_label(raw) -> str:
     if raw is None:
         return "Unknown"
-    if isinstance(raw, (np.floating, float)):
+    if isinstance(raw, np.floating | float):
         if np.isnan(raw):
             return "Unknown"
         v = float(raw)
         if v.is_integer():
             return f"Creator {int(v):,}"
         return f"Creator {v:,.0f}"
-    if isinstance(raw, (np.integer, int)):
+    if isinstance(raw, np.integer | int):
         return f"Creator {int(raw):,}"
     return str(raw)[:40]
 
