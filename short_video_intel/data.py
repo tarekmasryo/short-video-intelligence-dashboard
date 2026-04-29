@@ -225,8 +225,10 @@ def detect_columns(df: pd.DataFrame) -> dict[str, str]:
                 if key == "creator" and has_metric_tokens(col_norm):
                     continue
 
-                if cand_norm in tokens or col_norm.startswith(f"{cand_norm}_") or col_norm.endswith(
-                    f"_{cand_norm}"
+                if (
+                    cand_norm in tokens
+                    or col_norm.startswith(f"{cand_norm}_")
+                    or col_norm.endswith(f"_{cand_norm}")
                 ):
                     detected[key] = col
                     break
@@ -246,7 +248,7 @@ def parse_hashtags_cell(x) -> list[str]:
     if s.startswith("[") and s.endswith("]"):
         try:
             v = ast.literal_eval(s)
-            if isinstance(v, list | tuple):
+            if isinstance(v, (list, tuple)):
                 return [str(t).strip() for t in v if str(t).strip()]
         except Exception:
             pass

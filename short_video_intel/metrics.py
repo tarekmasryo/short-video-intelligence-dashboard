@@ -10,7 +10,12 @@ def aggregate_time_metric(df: pd.DataFrame, *, metric: str, period: str = "day")
         return pd.DataFrame(columns=["time", "value"])
 
     period = period.lower().strip()
-    col = "date" if period == "day" else "week" if period == "week" else "month"
+    if period == "day":
+        col = "date"
+    elif period == "week":
+        col = "week"
+    else:
+        col = "month"
     if col not in df.columns:
         return pd.DataFrame(columns=["time", "value"])
 

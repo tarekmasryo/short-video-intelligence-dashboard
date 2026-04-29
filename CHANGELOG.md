@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.1.3 (CI hardening)
+
+- Updated GitHub Actions to current Node 24-compatible action versions.
+- Added `fail-fast: false` to expose both Python matrix results during CI.
+- Switched CI commands to `python -m ...` for more reliable tool resolution.
+- Added a syntax-check step before tests.
+- Replaced newer Streamlit `width="stretch"` calls with `use_container_width=True` for broader Streamlit compatibility.
+- Removed generated cache artifacts from the release package.
+
 ## v0.1.2 (reviewed release)
 
 - Hardened column detection to prefer creator identity fields over aggregate creator metrics.

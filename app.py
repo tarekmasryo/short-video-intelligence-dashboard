@@ -314,7 +314,7 @@ class DashboardApp:
                         log_y=True,
                     )
                     fig.update_layout(height=420, showlegend=False)
-                    st.plotly_chart(fig, width="stretch")
+                    st.plotly_chart(fig, use_container_width=True)
                 elif "views" in fdf.columns:
                     fig = px.histogram(
                         fdf,
@@ -324,7 +324,7 @@ class DashboardApp:
                         log_y=True,
                     )
                     fig.update_layout(height=420)
-                    st.plotly_chart(fig, width="stretch")
+                    st.plotly_chart(fig, use_container_width=True)
 
             with col_b:
                 stats_rows = []
@@ -391,7 +391,7 @@ class DashboardApp:
                         title="Viral potential distribution",
                     )
                     pie_fig.update_layout(height=380)
-                    st.plotly_chart(pie_fig, width="stretch")
+                    st.plotly_chart(pie_fig, use_container_width=True)
                 else:
                     st.info(
                         "Viral potential is derived from virality score and engagement; it activates when those metrics exist."
@@ -500,7 +500,7 @@ class DashboardApp:
                             col=1,
                         )
                         fig.update_yaxes(title_text="Growth rate %", row=2, col=1)
-                        st.plotly_chart(fig, width="stretch")
+                        st.plotly_chart(fig, use_container_width=True)
 
                         col_x, col_y, col_z = st.columns(3)
 
@@ -569,7 +569,7 @@ class DashboardApp:
                         title="Median views by publish hour",
                     )
                     fig.update_layout(height=380)
-                    st.plotly_chart(fig, width="stretch")
+                    st.plotly_chart(fig, use_container_width=True)
 
             if "day_of_week" in fdf.columns and "views" in fdf.columns:
                 with c2:
@@ -595,7 +595,7 @@ class DashboardApp:
                         title="Median views by day of week",
                     )
                     fig.update_layout(height=380)
-                    st.plotly_chart(fig, width="stretch")
+                    st.plotly_chart(fig, use_container_width=True)
 
         with tabs[2]:
             st.markdown(
@@ -658,7 +658,7 @@ class DashboardApp:
                         title=f"Top {top_n} creators by {format_metric_label(metric)}",
                     )
                     fig.update_layout(height=520)
-                    st.plotly_chart(fig, width="stretch")
+                    st.plotly_chart(fig, use_container_width=True)
 
                 with c2:
                     rows_html = ""
@@ -708,7 +708,7 @@ class DashboardApp:
                         title="Median views by duration bucket",
                     )
                     fig.update_layout(height=380)
-                    st.plotly_chart(fig, width="stretch")
+                    st.plotly_chart(fig, use_container_width=True)
 
             with c2:
                 if "category" in fdf.columns and "views" in fdf.columns:
@@ -728,7 +728,7 @@ class DashboardApp:
                         title="Top categories by median views",
                     )
                     fig.update_layout(height=380)
-                    st.plotly_chart(fig, width="stretch")
+                    st.plotly_chart(fig, use_container_width=True)
 
         with tabs[3]:
             st.markdown('<div class="section-title">Virality lab</div>', unsafe_allow_html=True)
@@ -772,7 +772,7 @@ class DashboardApp:
                             annotation_position="top right",
                         )
                         fig.update_layout(height=420)
-                        st.plotly_chart(fig, width="stretch")
+                        st.plotly_chart(fig, use_container_width=True)
 
                     with c2:
                         extra_html = ""
@@ -835,13 +835,13 @@ class DashboardApp:
 
                         st.dataframe(
                             viral_candidates[preview_cols].head(100),
-                            width="stretch",
+                            use_container_width=True,
                             height=420,
                         )
                     else:
                         st.dataframe(
                             viral_candidates.head(100),
-                            width="stretch",
+                            use_container_width=True,
                             height=420,
                         )
 
@@ -885,7 +885,7 @@ class DashboardApp:
                                 yaxis_title="Engagement rate",
                             )
                             fig.update_xaxes(type="log")
-                            st.plotly_chart(fig, width="stretch")
+                            st.plotly_chart(fig, use_container_width=True)
 
         with tabs[4]:
             st.markdown(
@@ -939,7 +939,7 @@ class DashboardApp:
                         title=f"{format_metric_label(metric)} by {format_dim_label(dim)} ({agg_type})",
                     )
                     fig.update_layout(height=520)
-                    st.plotly_chart(fig, width="stretch")
+                    st.plotly_chart(fig, use_container_width=True)
 
                 with col2:
                     rows_html = ""
@@ -988,7 +988,7 @@ class DashboardApp:
                 )
                 st.dataframe(
                     fdf.head(rows_to_show),
-                    width="stretch",
+                    use_container_width=True,
                     height=480,
                 )
 
@@ -1001,7 +1001,7 @@ class DashboardApp:
                 )
 
                 if st.checkbox("Show numeric summary"):
-                    st.dataframe(fdf.describe(include="number"), width="stretch")
+                    st.dataframe(fdf.describe(include="number"), use_container_width=True)
 
                 if st.checkbox("Show column info"):
                     info_df = pd.DataFrame(
@@ -1012,7 +1012,7 @@ class DashboardApp:
                             "null": fdf.isnull().sum().values,
                         }
                     )
-                    st.dataframe(info_df, width="stretch")
+                    st.dataframe(info_df, use_container_width=True)
 
         st.markdown(
             """
