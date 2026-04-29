@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.4 (stable GitHub CI)
+
+- Simplified CI to a single Python 3.11 validation job for predictable green builds.
+- Updated workflow actions to Node 24-compatible action versions.
+- Removed formatting/lint steps from CI to avoid style-only failures blocking releases.
+- Pinned runtime and test dependencies for reproducible installs.
+- Added `.python-version` to keep local and CI Python versions aligned.
+
 ## v0.1.3 (CI hardening)
 
 - Updated GitHub Actions to current Node 24-compatible action versions.

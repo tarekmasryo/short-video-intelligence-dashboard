@@ -2,9 +2,8 @@
 ### Creators 👤 • Virality 🚀 • Timing ⏱️ • Segments 🧩 (Decision-Ready Analytics ✅)
 
 [![Streamlit](https://img.shields.io/badge/Powered%20by-Streamlit-FF4B4B)](https://streamlit.io/)
-![Python](https://img.shields.io/badge/Python-3.11%2B-2b5b84)
+![Python](https://img.shields.io/badge/Python-3.11-2b5b84)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue)
-![Ruff](https://img.shields.io/badge/lint-ruff-261230)
 ![Pytest](https://img.shields.io/badge/tests-pytest-0A9EDC)
 ![CI](https://github.com/tarekmasryo/short-video-intelligence-dashboard/actions/workflows/ci.yml/badge.svg)
 
@@ -100,14 +99,20 @@ streamlit run app.py
 
 ---
 
-## ✅ Quality checks (recommended)
+## ✅ Quality checks
+
+The GitHub Actions workflow runs a small, stable validation set:
 
 ```bash
-pip install -r requirements-dev.txt
+python -m compileall -q app.py short_video_intel tests
+python -m pytest -q
+```
 
-ruff check .
-ruff format . --check
-pytest -q
+For local checks, install dependencies first:
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+python -m pytest -q
 ```
 
 ---
