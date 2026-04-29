@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -131,7 +132,11 @@ def try_auto_load(paths) -> tuple[pd.DataFrame, str]:
 
 
 def detect_columns(df: pd.DataFrame) -> dict[str, str]:
-    """Detect common columns by name (exact match first, then substring match)."""
+    """Detect common columns by name with conservative fallbacks.
+
+    The detector prefers exact semantic fields and avoids mapping aggregate helper columns
+    such as ``creator_avg_views`` as creator identifiers.
+    """
     if df is None or getattr(df, "empty", True):
         return {}
 
@@ -144,6 +149,7 @@ def detect_columns(df: pd.DataFrame) -> dict[str, str]:
         "duration": ["duration_sec", "duration", "length_sec", "video_length", "video_length_sec"],
         "date": [
             "publish_date",
+            "publish_date_approx",
             "published_at",
             "publish_time",
             "date",
@@ -153,41 +159,78 @@ def detect_columns(df: pd.DataFrame) -> dict[str, str]:
         ],
         "platform": ["platform", "source", "app"],
         "creator": [
+            "author_handle",
+            "creator_handle",
+            "creator_name",
+            "channel_name",
             "creator",
             "channel",
-            "channel_name",
             "author",
             "uploader",
             "account",
-            "handle",
             "username",
+            "handle",
             "page",
         ],
-        "title": ["title", "video_title", "name"],
-        "category": ["category", "topic", "tag"],
+        "title": ["title", "video_title", "title_keywords"],
+        "category": ["category", "content_category", "topic", "genre"],
         "country": ["country", "region", "market", "geo"],
-        "hashtags": ["hashtags", "tags", "hashtag"],
+        "hashtags": ["hashtag", "hashtags", "tags"],
     }
 
-    detected: dict[str, str] = {}
-    lower_cols = {c.lower(): c for c in df.columns}
+    metric_tokens = {
+        "avg",
+        "average",
+        "count",
+        "counts",
+        "views",
+        "likes",
+        "comments",
+        "shares",
+        "rate",
+        "score",
+        "total",
+        "ratio",
+    }
 
-    # Exact match
+    def normalize(value: str) -> str:
+        return re.sub(r"[^a-z0-9]+", "_", str(value).lower()).strip("_")
+
+    def has_metric_tokens(column: str) -> bool:
+        tokens = set(normalize(column).split("_"))
+        return bool(tokens & metric_tokens)
+
+    detected: dict[str, str] = {}
+    normalized_cols = {normalize(c): c for c in df.columns}
+
+    # Exact normalized match first.
     for key, candidates in column_map.items():
         for cand in candidates:
-            if cand in lower_cols:
-                detected[key] = lower_cols[cand]
+            normalized = normalize(cand)
+            if normalized in normalized_cols:
+                detected[key] = normalized_cols[normalized]
                 break
 
-    # Substring match (fallback)
+    # Conservative fallback for common "prefix/suffix" names such as video_title or creator_name.
     for key, candidates in column_map.items():
         if key in detected:
             continue
+
         for cand in candidates:
-            for c in df.columns:
-                if cand in c.lower():
-                    detected[key] = c
+            cand_norm = normalize(cand)
+            for col in df.columns:
+                col_norm = normalize(col)
+                tokens = col_norm.split("_")
+
+                if key == "creator" and has_metric_tokens(col_norm):
+                    continue
+
+                if cand_norm in tokens or col_norm.startswith(f"{cand_norm}_") or col_norm.endswith(
+                    f"_{cand_norm}"
+                ):
+                    detected[key] = col
                     break
+
             if key in detected:
                 break
 

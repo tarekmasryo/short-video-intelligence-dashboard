@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.2 (reviewed release)
+
+- Hardened column detection to prefer creator identity fields over aggregate creator metrics.
+- Added regression tests for creator, title, and category auto-detection.
+- Kept the dashboard package layout and shipped demo dataset unchanged.
+
 ## v0.1.1 (publish-ready)
 
 - README aligned to the actual package layout + added screenshots

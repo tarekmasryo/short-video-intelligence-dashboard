@@ -41,3 +41,32 @@ def test_enrich_and_label():
     assert "virality_score" in df.columns
     df2 = label_viral_potential(df)
     assert "viral_potential" in df2.columns
+
+
+def test_detect_columns_prefers_author_handle_over_creator_metric() -> None:
+    df = pd.DataFrame(
+        {
+            "author_handle": ["creator_a", "creator_b"],
+            "creator_avg_views": [1000, 2000],
+            "views": [10, 20],
+        }
+    )
+
+    mapping = detect_columns(df)
+
+    assert mapping["creator"] == "author_handle"
+
+
+def test_detect_columns_avoids_over_broad_title_and_category_matches() -> None:
+    df = pd.DataFrame(
+        {
+            "channel_name": ["a", "b"],
+            "hashtags": ["#x", "#y"],
+            "views": [10, 20],
+        }
+    )
+
+    mapping = detect_columns(df)
+
+    assert "title" not in mapping
+    assert "category" not in mapping
