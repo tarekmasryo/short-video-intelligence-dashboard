@@ -38,3 +38,7 @@ jobs:
       - name: Unit tests
         run: |
           python -m pytest -q
+
+      - name: Docker build
+        run: |
+          docker build -t short-video-intelligence-dashboard:ci .

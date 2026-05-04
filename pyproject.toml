@@ -1,6 +1,6 @@
 [project]
 name = "short-video-intelligence-dashboard"
-version = "0.1.4"
+version = "0.1.5"
 description = "Interactive analytics for short-video growth, creators, and virality."
 requires-python = ">=3.11"
 readme = "README.md"

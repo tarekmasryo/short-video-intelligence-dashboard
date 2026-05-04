@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from pathlib import Path
 
 import numpy as np
@@ -27,13 +26,13 @@ from short_video_intel.data import (
 from short_video_intel.metrics import aggregate_time_metric
 from short_video_intel.theme import DASHBOARD_CSS
 from short_video_intel.ui import (
+    escape_html,
     format_creator_label,
     format_dim_label,
     format_metric_label,
     format_metric_value,
 )
 
-warnings.filterwarnings("ignore")
 
 
 class DashboardApp:
@@ -194,6 +193,7 @@ class DashboardApp:
             if "platform" in fdf.columns
             else ""
         )
+        platform_text_safe = escape_html(platform_text, default="—", max_length=120)
 
         hero_html = f"""
         <div class="hero">
@@ -222,7 +222,7 @@ class DashboardApp:
             </div>
             <div class="hero-kpi">
               <div class="hero-kpi-label">Platforms in scope</div>
-              <div class="hero-kpi-value">{platform_text or "—"}</div>
+              <div class="hero-kpi-value">{platform_text_safe}</div>
             </div>
           </div>
         </div>
@@ -360,7 +360,7 @@ class DashboardApp:
 
                 if stats_rows:
                     html_rows = "".join(
-                        f"<div style='display:flex;justify-content:space-between;font-size:13px;color:#e5e7eb;margin-bottom:4px;'><span style='color:#9ca3af;'>{k}</span><span style='font-weight:600;'>{v}</span></div>"
+                        f"<div style='display:flex;justify-content:space-between;font-size:13px;color:#e5e7eb;margin-bottom:4px;'><span style='color:#9ca3af;'>{escape_html(k)}</span><span style='font-weight:600;'>{escape_html(v)}</span></div>"
                         for k, v in stats_rows
                     )
                     card_html = f"""
@@ -410,7 +410,7 @@ class DashboardApp:
                     for row in tier_stats.itertuples(index=False):
                         rows_html += (
                             f"<div style='display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;'>"
-                            f"<span style='color:#9ca3af;'>{row.performance_tier}</span>"
+                            f"<span style='color:#9ca3af;'>{escape_html(row.performance_tier)}</span>"
                             f"<span style='font-weight:600;color:#e5e7eb;'>{row.median_eng*100:.2f}%</span>"
                             f"</div>"
                         )
@@ -511,6 +511,7 @@ class DashboardApp:
                             if hasattr(peak_period, "strftime")
                             else str(peak_period)
                         )
+                        peak_period_text = escape_html(peak_period_text)
                         peak_value_text = format_metric_value(
                             metric_choice, best_row["metric_value"]
                         )
@@ -788,7 +789,7 @@ class DashboardApp:
                             for row in by_platform.itertuples(index=False):
                                 rows += (
                                     f"<div style='display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;'>"
-                                    f"<span style='color:#9ca3af;'>{row.platform}</span>"
+                                    f"<span style='color:#9ca3af;'>{escape_html(row.platform)}</span>"
                                     f"<span style='font-weight:600;color:#e5e7eb;'>{row.median_vs:.1f}</span>"
                                     f"</div>"
                                 )
@@ -949,7 +950,7 @@ class DashboardApp:
                     for i, row in enumerate(seg.head(5).itertuples(index=False), start=1):
                         seg_value = getattr(row, metric)
                         metric_value = format_metric_value(metric, seg_value)
-                        dim_value = getattr(row, dim)
+                        dim_value = escape_html(getattr(row, dim), default="Unknown", max_length=80)
 
                         rows_html += (
                             "<div style='margin-top:10px;'>"

@@ -326,8 +326,8 @@ def enrich_data(df: pd.DataFrame, col_map: dict[str, str]) -> pd.DataFrame:
                 if v <= q80:
                     return "Strong"
                 if v <= q95:
-                    return "Top 5%"
-                return "Top 1%"
+                    return "Breakout"
+                return "Top 5%"
 
             df["performance_tier"] = views.map(bucket)
 

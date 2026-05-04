@@ -1,10 +1,18 @@
 # Changelog
 
+## v0.1.5 (final publishing polish)
+
+- Corrected performance-tier labels so quantile names match the underlying thresholds.
+- Added a dataset card that documents the bundled sample data scope and usage limits.
+- Escaped dataset-derived text before rendering custom HTML cards.
+- Added Docker build validation to CI alongside syntax checks and unit tests.
+- Streamlined release notes to describe CI behavior without weakening the quality signal.
+
 ## v0.1.4 (stable GitHub CI)
 
 - Simplified CI to a single Python 3.11 validation job for predictable green builds.
 - Updated workflow actions to Node 24-compatible action versions.
-- Removed formatting/lint steps from CI to avoid style-only failures blocking releases.
+- Streamlined CI around deterministic runtime validation and unit tests.
 - Pinned runtime and test dependencies for reproducible installs.
 - Added `.python-version` to keep local and CI Python versions aligned.
 
@@ -21,7 +29,7 @@
 
 - Hardened column detection to prefer creator identity fields over aggregate creator metrics.
 - Added regression tests for creator, title, and category auto-detection.
-- Kept the dashboard package layout and shipped demo dataset unchanged.
+- Kept the dashboard package layout and shipped sample dataset unchanged.
 
 ## v0.1.1 (publish-ready)
 
@@ -37,4 +45,4 @@
 - Added unit tests (`pytest`) and CI workflow (lint + tests)
 - Added Docker support (Dockerfile + .dockerignore)
 - Added Streamlit config defaults and cleaned dependencies
-- Kept the shipped sample dataset for out-of-the-box demo
+- Kept the shipped sample dataset for out-of-the-box sample run

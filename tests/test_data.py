@@ -43,6 +43,22 @@ def test_enrich_and_label():
     assert "viral_potential" in df2.columns
 
 
+def test_performance_tier_labels_match_quantiles() -> None:
+    raw = pd.DataFrame(
+        {
+            "views": list(range(1, 101)),
+            "likes": [1] * 100,
+            "comments": [1] * 100,
+            "shares": [1] * 100,
+        }
+    )
+    df = enrich_data(raw, detect_columns(raw))
+    labels = set(df["performance_tier"].dropna().unique())
+
+    assert "Top 1%" not in labels
+    assert {"Baseline", "Strong", "Breakout", "Top 5%"}.issubset(labels)
+
+
 def test_detect_columns_prefers_author_handle_over_creator_metric() -> None:
     df = pd.DataFrame(
         {
